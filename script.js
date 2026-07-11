@@ -84,7 +84,7 @@ const SECRET_MEMORY = {
 
 function createStartupStars() {
     const container = document.getElementById('startupStars');
-    const numberOfStars = 150;
+    const numberOfStars = 80; // Reduced from 150 for mobile performance
 
     for (let i = 0; i < numberOfStars; i++) {
         const star = document.createElement('div');
@@ -298,7 +298,7 @@ function updateMusicButton() {
 
 function createLoadingStars() {
     const container = document.getElementById('loadingStars');
-    const numberOfStars = 100;
+    const numberOfStars = 60; // Reduced from 100 for mobile performance
 
     for (let i = 0; i < numberOfStars; i++) {
         const star = document.createElement('div');
@@ -340,13 +340,14 @@ function showStartupOverlay() {
 function createStars() {
     const container = document.getElementById('starsContainer');
 
-    // Star type definitions: [class, count, minSize, maxSize, minDur, maxDur]
+    // Star type definitions optimized for mobile performance
+    // Total: ~245 stars (reduced from 447)
     const starTypes = [
-        { cls: 'tiny',   count: 220, minS: 0.5, maxS: 1.2,  minD: 3.5, maxD: 7  },
-        { cls: 'small',  count: 130, minS: 1.0, maxS: 1.8,  minD: 2.8, maxD: 5.5 },
-        { cls: 'medium', count: 60,  minS: 1.6, maxS: 2.8,  minD: 4.5, maxD: 9   },
-        { cls: 'bright', count: 25,  minS: 2.4, maxS: 3.8,  minD: 6,   maxD: 12  },
-        { cls: 'gold',   count: 12,  minS: 1.8, maxS: 3.0,  minD: 7,   maxD: 14  },
+        { cls: 'tiny',   count: 120, minS: 0.5, maxS: 1.2,  minD: 3.5, maxD: 7  },
+        { cls: 'small',  count: 70,  minS: 1.0, maxS: 1.8,  minD: 2.8, maxD: 5.5 },
+        { cls: 'medium', count: 35,  minS: 1.6, maxS: 2.8,  minD: 4.5, maxD: 9   },
+        { cls: 'bright', count: 15,  minS: 2.4, maxS: 3.8,  minD: 6,   maxD: 12  },
+        { cls: 'gold',   count: 5,   minS: 1.8, maxS: 3.0,  minD: 7,   maxD: 14  },
     ];
 
     const frag = document.createDocumentFragment();
@@ -596,7 +597,7 @@ function closeMemoryModal() {
 
 function createEnvelopeParticles() {
     const container = document.getElementById('envelopeParticles');
-    const numParticles = 30;
+    const numParticles = 20; // Reduced from 30 for mobile performance
     
     for (let i = 0; i < numParticles; i++) {
         const particle = document.createElement('div');
@@ -654,7 +655,7 @@ function createConstellation() {
     canvas.height = window.innerHeight;
     
     const stars = [];
-    const numStars = 50;
+    const numStars = 35; // Reduced from 50 for mobile performance
     
     // Create star positions
     for (let i = 0; i < numStars; i++) {
@@ -670,10 +671,19 @@ function createConstellation() {
         });
     }
     
-    let animationFrame = 0;
+    let lastFrameTime = 0;
+    const targetFPS = 30; // Lower FPS for mobile performance
+    const frameInterval = 1000 / targetFPS;
     
-    // Animation
-    function animate() {
+    // Animation with FPS throttling
+    function animate(currentTime) {
+        requestAnimationFrame(animate);
+        
+        // Throttle to target FPS
+        const elapsed = currentTime - lastFrameTime;
+        if (elapsed < frameInterval) return;
+        lastFrameTime = currentTime - (elapsed % frameInterval);
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         animationFrame++;
@@ -696,8 +706,8 @@ function createConstellation() {
             if (star.y > canvas.height) star.y = 0;
         });
         
-        // Draw connections (slower update)
-        if (animationFrame % 2 === 0) {
+        // Draw connections (less frequently for performance)
+        if (animationFrame % 3 === 0) { // Changed from 2 to 3 for better performance
             stars.forEach((star1, i) => {
                 stars.forEach((star2, j) => {
                     if (i !== j) {
@@ -722,7 +732,7 @@ function createConstellation() {
         requestAnimationFrame(animate);
     }
     
-    animate();
+    requestAnimationFrame(animate);
 }
 
 // ===================================
@@ -766,9 +776,9 @@ function createShootingStars() {
         });
     }
 
-    // Schedule rare appearances: 8–25 seconds between each
+    // Schedule rare appearances: 10–30 seconds for better mobile performance
     function scheduleNext() {
-        const delay = 8000 + Math.random() * 17000;
+        const delay = 10000 + Math.random() * 20000; // Increased delay
         setTimeout(() => {
             spawnShootingStar();
             scheduleNext();
@@ -776,7 +786,18 @@ function createShootingStars() {
     }
     scheduleNext();
 
-    function animate() {
+    let lastFrameTime = 0;
+    const targetFPS = 30; // Lower FPS for mobile performance
+    const frameInterval = 1000 / targetFPS;
+
+    function animate(currentTime) {
+        requestAnimationFrame(animate);
+        
+        // Throttle to target FPS
+        const elapsed = currentTime - lastFrameTime;
+        if (elapsed < frameInterval) return;
+        lastFrameTime = currentTime - (elapsed % frameInterval);
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         for (let i = shootingStars.length - 1; i >= 0; i--) {
@@ -832,7 +853,7 @@ function createShootingStars() {
         requestAnimationFrame(animate);
     }
 
-    animate();
+    requestAnimationFrame(animate);
 }
 
 // ===================================
@@ -865,8 +886,8 @@ function createHeartParticles() {
         });
     }
     
-    // Create hearts periodically
-    setInterval(createHeart, 500);
+    // Create hearts periodically - reduced frequency for mobile performance
+    setInterval(createHeart, 800); // Increased from 500ms
     
     function drawHeart(x, y, size, opacity) {
         ctx.save();
@@ -878,7 +899,18 @@ function createHeartParticles() {
         ctx.restore();
     }
     
-    function animate() {
+    let lastFrameTime = 0;
+    const targetFPS = 30; // Lower FPS for mobile performance
+    const frameInterval = 1000 / targetFPS;
+    
+    function animate(currentTime) {
+        requestAnimationFrame(animate);
+        
+        // Throttle to target FPS
+        const elapsed = currentTime - lastFrameTime;
+        if (elapsed < frameInterval) return;
+        lastFrameTime = currentTime - (elapsed % frameInterval);
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         hearts.forEach((heart, index) => {
@@ -892,11 +924,9 @@ function createHeartParticles() {
                 hearts.splice(index, 1);
             }
         });
-        
-        requestAnimationFrame(animate);
     }
     
-    animate();
+    requestAnimationFrame(animate);
 }
 
 // ===================================
@@ -916,7 +946,7 @@ function createGoldenParticles() {
     canvas.classList.add('visible');
 
     const particles = [];
-    const count = 55;
+    const count = 25; // Reduced from 55 for mobile performance
 
     for (let i = 0; i < count; i++) {
         particles.push({
@@ -935,7 +965,18 @@ function createGoldenParticles() {
         });
     }
 
-    function animate() {
+    let lastFrameTime = 0;
+    const targetFPS = 30; // Lower FPS for mobile performance
+    const frameInterval = 1000 / targetFPS;
+
+    function animate(currentTime) {
+        requestAnimationFrame(animate);
+        
+        // Throttle to target FPS
+        const elapsed = currentTime - lastFrameTime;
+        if (elapsed < frameInterval) return;
+        lastFrameTime = currentTime - (elapsed % frameInterval);
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         particles.forEach(p => {
@@ -956,11 +997,9 @@ function createGoldenParticles() {
                 p.x = Math.random() * canvas.width;
             }
         });
-
-        requestAnimationFrame(animate);
     }
 
-    animate();
+    requestAnimationFrame(animate);
 }
 
 // ===================================
@@ -1014,7 +1053,7 @@ function createConfetti() {
     canvas.height = window.innerHeight;
     
     const confetti = [];
-    const confettiCount = 200;
+    const confettiCount = 120; // Reduced from 200 for mobile performance
     const colors = ['#ff6b6b', '#ee5a6f', '#667eea', '#764ba2', '#ffd700', '#48dbfb', '#ff9ff3', '#54a0ff'];
     
     // Create confetti pieces
@@ -1031,8 +1070,18 @@ function createConfetti() {
         });
     }
     
-    // Animation
-    function animate() {
+    let lastFrameTime = 0;
+    const targetFPS = 30; // Lower FPS for mobile performance
+    const frameInterval = 1000 / targetFPS;
+    
+    function animate(currentTime) {
+        requestAnimationFrame(animate);
+        
+        // Throttle to target FPS
+        const elapsed = currentTime - lastFrameTime;
+        if (elapsed < frameInterval) return;
+        lastFrameTime = currentTime - (elapsed % frameInterval);
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         confetti.forEach((piece, index) => {
@@ -1062,11 +1111,9 @@ function createConfetti() {
                 };
             }
         });
-        
-        requestAnimationFrame(animate);
     }
     
-    animate();
+    requestAnimationFrame(animate);
 }
 
 // ===================================
