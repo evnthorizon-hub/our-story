@@ -2,6 +2,10 @@
 // CONFIGURATION
 // ===================================
 
+// Mobile detection for performance optimization
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+const isLowEndDevice = isMobile && (navigator.hardwareConcurrency <= 4 || window.innerWidth <= 480);
+
 const CONFIG = {
     bestieName: 'Badmosh Bauniii',
     typewriterTexts: [
@@ -18,6 +22,14 @@ const CONFIG = {
     ],
     typewriterSpeed: 80,
     pauseBetweenLines: 1500
+};
+
+// Performance config based on device
+const PERF_CONFIG = {
+    targetFPS: isMobile ? 30 : 60,
+    starMultiplier: isLowEndDevice ? 0.4 : (isMobile ? 0.6 : 1),
+    particleMultiplier: isLowEndDevice ? 0.3 : (isMobile ? 0.5 : 1),
+    enableHeavyEffects: !isMobile
 };
 
 // ===================================
@@ -84,7 +96,7 @@ const SECRET_MEMORY = {
 
 function createStartupStars() {
     const container = document.getElementById('startupStars');
-    const numberOfStars = 80; // Reduced from 150 for mobile performance
+    const numberOfStars = Math.floor(80 * PERF_CONFIG.starMultiplier); // Adaptive for mobile
 
     for (let i = 0; i < numberOfStars; i++) {
         const star = document.createElement('div');
@@ -298,7 +310,7 @@ function updateMusicButton() {
 
 function createLoadingStars() {
     const container = document.getElementById('loadingStars');
-    const numberOfStars = 60; // Reduced from 100 for mobile performance
+    const numberOfStars = Math.floor(60 * PERF_CONFIG.starMultiplier); // Adaptive for mobile
 
     for (let i = 0; i < numberOfStars; i++) {
         const star = document.createElement('div');
@@ -341,13 +353,13 @@ function createStars() {
     const container = document.getElementById('starsContainer');
 
     // Star type definitions optimized for mobile performance
-    // Total: ~245 stars (reduced from 447)
+    // Total: ~245 stars on desktop, adaptive on mobile
     const starTypes = [
-        { cls: 'tiny',   count: 120, minS: 0.5, maxS: 1.2,  minD: 3.5, maxD: 7  },
-        { cls: 'small',  count: 70,  minS: 1.0, maxS: 1.8,  minD: 2.8, maxD: 5.5 },
-        { cls: 'medium', count: 35,  minS: 1.6, maxS: 2.8,  minD: 4.5, maxD: 9   },
-        { cls: 'bright', count: 15,  minS: 2.4, maxS: 3.8,  minD: 6,   maxD: 12  },
-        { cls: 'gold',   count: 5,   minS: 1.8, maxS: 3.0,  minD: 7,   maxD: 14  },
+        { cls: 'tiny',   count: Math.floor(120 * PERF_CONFIG.starMultiplier), minS: 0.5, maxS: 1.2,  minD: 3.5, maxD: 7  },
+        { cls: 'small',  count: Math.floor(70 * PERF_CONFIG.starMultiplier),  minS: 1.0, maxS: 1.8,  minD: 2.8, maxD: 5.5 },
+        { cls: 'medium', count: Math.floor(35 * PERF_CONFIG.starMultiplier),  minS: 1.6, maxS: 2.8,  minD: 4.5, maxD: 9   },
+        { cls: 'bright', count: Math.floor(15 * PERF_CONFIG.starMultiplier),  minS: 2.4, maxS: 3.8,  minD: 6,   maxD: 12  },
+        { cls: 'gold',   count: Math.floor(5 * PERF_CONFIG.starMultiplier),   minS: 1.8, maxS: 3.0,  minD: 7,   maxD: 14  },
     ];
 
     const frag = document.createDocumentFragment();
@@ -597,7 +609,7 @@ function closeMemoryModal() {
 
 function createEnvelopeParticles() {
     const container = document.getElementById('envelopeParticles');
-    const numParticles = 20; // Reduced from 30 for mobile performance
+    const numParticles = Math.floor(20 * PERF_CONFIG.particleMultiplier); // Adaptive for mobile
     
     for (let i = 0; i < numParticles; i++) {
         const particle = document.createElement('div');
@@ -655,7 +667,7 @@ function createConstellation() {
     canvas.height = window.innerHeight;
     
     const stars = [];
-    const numStars = 35; // Reduced from 50 for mobile performance
+    const numStars = Math.floor(35 * PERF_CONFIG.starMultiplier); // Adaptive for mobile
     
     // Create star positions
     for (let i = 0; i < numStars; i++) {
@@ -672,7 +684,7 @@ function createConstellation() {
     }
     
     let lastFrameTime = 0;
-    const targetFPS = 30; // Lower FPS for mobile performance
+    const targetFPS = PERF_CONFIG.targetFPS;
     const frameInterval = 1000 / targetFPS;
     
     // Animation with FPS throttling
@@ -787,7 +799,7 @@ function createShootingStars() {
     scheduleNext();
 
     let lastFrameTime = 0;
-    const targetFPS = 30; // Lower FPS for mobile performance
+    const targetFPS = PERF_CONFIG.targetFPS;
     const frameInterval = 1000 / targetFPS;
 
     function animate(currentTime) {
@@ -900,7 +912,7 @@ function createHeartParticles() {
     }
     
     let lastFrameTime = 0;
-    const targetFPS = 30; // Lower FPS for mobile performance
+    const targetFPS = PERF_CONFIG.targetFPS;
     const frameInterval = 1000 / targetFPS;
     
     function animate(currentTime) {
@@ -946,7 +958,7 @@ function createGoldenParticles() {
     canvas.classList.add('visible');
 
     const particles = [];
-    const count = 25; // Reduced from 55 for mobile performance
+    const count = Math.floor(25 * PERF_CONFIG.particleMultiplier); // Adaptive for mobile
 
     for (let i = 0; i < count; i++) {
         particles.push({
@@ -966,7 +978,7 @@ function createGoldenParticles() {
     }
 
     let lastFrameTime = 0;
-    const targetFPS = 30; // Lower FPS for mobile performance
+    const targetFPS = PERF_CONFIG.targetFPS;
     const frameInterval = 1000 / targetFPS;
 
     function animate(currentTime) {
@@ -1053,7 +1065,7 @@ function createConfetti() {
     canvas.height = window.innerHeight;
     
     const confetti = [];
-    const confettiCount = 120; // Reduced from 200 for mobile performance
+    const confettiCount = Math.floor(120 * PERF_CONFIG.particleMultiplier); // Adaptive for mobile
     const colors = ['#ff6b6b', '#ee5a6f', '#667eea', '#764ba2', '#ffd700', '#48dbfb', '#ff9ff3', '#54a0ff'];
     
     // Create confetti pieces
@@ -1071,7 +1083,7 @@ function createConfetti() {
     }
     
     let lastFrameTime = 0;
-    const targetFPS = 30; // Lower FPS for mobile performance
+    const targetFPS = PERF_CONFIG.targetFPS;
     const frameInterval = 1000 / targetFPS;
     
     function animate(currentTime) {
@@ -1197,23 +1209,27 @@ document.getElementById('maybeBtn').addEventListener('click', () => {
     `;
 });
 
-// Handle window resize for canvas
+// Handle window resize for canvas with debouncing
+let resizeTimeout;
 window.addEventListener('resize', () => {
-    const canvases = [
-        'constellationCanvas',
-        'shootingStarsCanvas',
-        'confettiCanvas',
-        'heartParticlesCanvas',
-        'goldenParticlesCanvas'
-    ];
-    
-    canvases.forEach(id => {
-        const canvas = document.getElementById(id);
-        if (canvas) {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-    });
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        const canvases = [
+            'constellationCanvas',
+            'shootingStarsCanvas',
+            'confettiCanvas',
+            'heartParticlesCanvas',
+            'goldenParticlesCanvas'
+        ];
+        
+        canvases.forEach(id => {
+            const canvas = document.getElementById(id);
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+    }, 250); // Debounce resize events
 });
 
 // ===================================
@@ -1256,4 +1272,10 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         typeWriter(typewriterElement, CONFIG.typewriterTexts);
     }, 2500);
+    
+    // Mobile scroll optimization - passive listeners
+    if (isMobile) {
+        document.addEventListener('touchstart', function(){}, { passive: true });
+        document.addEventListener('touchmove', function(){}, { passive: true });
+    }
 });

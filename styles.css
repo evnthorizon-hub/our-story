@@ -18,6 +18,69 @@
     }
 }
 
+/* Mobile-first performance optimizations */
+@media (max-width: 768px) {
+    /* Disable heavy box-shadows on mobile */
+    .star.medium,
+    .star.bright,
+    .star.gold {
+        box-shadow: none !important;
+    }
+    
+    /* Simplify glass effects on mobile */
+    .glass-card {
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+    }
+    
+    /* Reduce blur on mobile */
+    .hero-portrait-glow,
+    .final-portrait-glow {
+        filter: blur(6px) !important;
+        opacity: 0.5 !important;
+    }
+    
+    /* Simplify shadows on mobile */
+    .hero-portrait,
+    .final-portrait,
+    .memory-modal-img,
+    .envelope-body {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* Remove hover effects on mobile (they cause lag) */
+    .memory-star:hover,
+    .glow-button:hover,
+    .continue-button:hover,
+    .answer-button:hover {
+        transform: none !important;
+        box-shadow: inherit !important;
+    }
+    
+    /* Disable glow animations on mobile */
+    .hero-portrait-glow,
+    .final-portrait-glow,
+    .star-glow {
+        animation: none !important;
+    }
+    
+    /* Simplify star animations on mobile */
+    .star {
+        animation-duration: 5s !important;
+    }
+    
+    /* Optimize scrolling performance */
+    body {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: none;
+    }
+    
+    /* Reduce filter usage */
+    .star-icon {
+        filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4)) !important;
+    }
+}
+
 /* GPU acceleration for key animated elements */
 .star,
 .memory-star,
@@ -29,12 +92,26 @@
     will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 /* Remove will-change after animations complete */
 .star.animated,
 .memory-star:not(:hover) {
     will-change: auto;
+}
+
+/* Optimize rendering with containment */
+.section {
+    contain: layout style paint;
+}
+
+.memory-modal {
+    contain: layout style;
+}
+
+.glass-card {
+    contain: layout;
 }
 
 /* ===================================
@@ -56,6 +133,17 @@ body {
     position: relative;
     min-height: 100vh;
     scroll-behavior: smooth;
+    /* Prevent white flash on scroll */
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile scroll optimization */
+@media (max-width: 768px) {
+    body {
+        scroll-behavior: auto; /* Smooth scroll can cause lag on mobile */
+    }
 }
 
 /* ===================================
@@ -579,6 +667,10 @@ button:focus-visible,
     height: 100%;
     z-index: 0;
     pointer-events: none;
+    /* Optimize rendering */
+    contain: strict;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 /* Cinematic star classes — set by JS */
@@ -587,6 +679,8 @@ button:focus-visible,
     border-radius: 50%;
     pointer-events: none;
     will-change: opacity, transform;
+    /* Optimize rendering */
+    contain: layout style paint;
 }
 
 /* Tiny distant stars */
@@ -668,15 +762,23 @@ button:focus-visible,
     opacity: 0;
     visibility: hidden;
     transition: opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1),
-                visibility 1.4s cubic-bezier(0.4, 0, 0.2, 1),
-                filter 1.4s cubic-bezier(0.4, 0, 0.2, 1);
-    filter: blur(4px);
+                visibility 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Prevent white flash on scroll */
+    background-color: transparent;
+    will-change: opacity;
 }
 
 .section.active {
     opacity: 1;
     visibility: visible;
-    filter: blur(0px);
+}
+
+/* Faster transitions on mobile */
+@media (max-width: 768px) {
+    .section {
+        transition: opacity 0.6s ease, visibility 0.6s ease;
+        /* Remove blur filter on mobile - causes lag */
+    }
 }
 
 .content-wrapper {
@@ -1242,6 +1344,17 @@ button:focus-visible,
     animation: fadeIn 0.4s ease;
     overflow-y: auto;
     overflow-x: hidden;
+    /* Optimize scroll performance */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* Simplified modal on mobile */
+@media (max-width: 768px) {
+    .memory-modal {
+        backdrop-filter: blur(5px) !important;
+        -webkit-backdrop-filter: blur(5px) !important;
+    }
 }
 
 .memory-modal.active {
