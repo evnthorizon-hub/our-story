@@ -450,10 +450,10 @@ body {
    =================================== */
 
 .music-button {
-    position: fixed;
-    top: 2rem;
-    right: 2rem;
-    z-index: 9998;
+    position: fixed !important;
+    top: 2rem !important;
+    right: 2rem !important;
+    z-index: 10002;
     background: linear-gradient(135deg,
         rgba(255,255,255,0.09) 0%,
         rgba(255,255,255,0.04) 100%) !important;
@@ -531,8 +531,8 @@ button:focus-visible,
 /* Mobile adjustments */
 @media (max-width: 768px) {
     .music-button {
-        top: 1rem;
-        right: 1rem;
+        top: 1rem !important;
+        right: 1rem !important;
         padding: 0.7rem 1.2rem;
         font-size: 0.9rem;
     }
