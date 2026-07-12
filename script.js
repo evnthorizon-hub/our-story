@@ -27,9 +27,10 @@ const CONFIG = {
 // Performance config based on device
 const PERF_CONFIG = {
     targetFPS: isMobile ? 30 : 60,
-    starMultiplier: isLowEndDevice ? 0.4 : (isMobile ? 0.6 : 1),
-    particleMultiplier: isLowEndDevice ? 0.3 : (isMobile ? 0.5 : 1),
-    enableHeavyEffects: !isMobile
+    starMultiplier: isLowEndDevice ? 0.25 : (isMobile ? 0.35 : 1),  // More aggressive reduction
+    particleMultiplier: isLowEndDevice ? 0.2 : (isMobile ? 0.3 : 1),  // More aggressive reduction
+    enableHeavyEffects: !isMobile,
+    enableSmoothScroll: !isMobile  // Disable smooth scroll on mobile - causes white flashes
 };
 
 // ===================================
@@ -97,6 +98,7 @@ const SECRET_MEMORY = {
 function createStartupStars() {
     const container = document.getElementById('startupStars');
     const numberOfStars = Math.floor(80 * PERF_CONFIG.starMultiplier); // Adaptive for mobile
+    const frag = document.createDocumentFragment(); // ✅ Use DocumentFragment
 
     for (let i = 0; i < numberOfStars; i++) {
         const star = document.createElement('div');
@@ -111,8 +113,10 @@ function createStartupStars() {
         
         star.style.animationDelay = Math.random() * 3 + 's';
         
-        container.appendChild(star);
+        frag.appendChild(star); // ✅ Append to fragment
     }
+    
+    container.appendChild(frag); // ✅ Single DOM operation
 }
 
 function setupStartupOverlay() {
@@ -311,6 +315,7 @@ function updateMusicButton() {
 function createLoadingStars() {
     const container = document.getElementById('loadingStars');
     const numberOfStars = Math.floor(60 * PERF_CONFIG.starMultiplier); // Adaptive for mobile
+    const frag = document.createDocumentFragment(); // ✅ Use DocumentFragment
 
     for (let i = 0; i < numberOfStars; i++) {
         const star = document.createElement('div');
@@ -325,8 +330,10 @@ function createLoadingStars() {
         
         star.style.animationDelay = Math.random() * 3 + 's';
         
-        container.appendChild(star);
+        frag.appendChild(star); // ✅ Append to fragment
     }
+    
+    container.appendChild(frag); // ✅ Single DOM operation
 }
 
 function hideLoadingScreen() {
@@ -448,9 +455,12 @@ function showSection(sectionId) {
 
     targetSection.classList.add('active');
     
-    // Smooth scroll to section
+    // Scroll to section - NO smooth scroll on mobile (causes white flashes)
     setTimeout(() => {
-        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        targetSection.scrollIntoView({ 
+            behavior: PERF_CONFIG.enableSmoothScroll ? 'smooth' : 'auto',
+            block: 'start' 
+        });
     }, 100);
 }
 
@@ -507,49 +517,52 @@ function openMemoryModal(memory, index) {
     const progress = document.getElementById('memoryProgress');
     const imageContainer = document.getElementById('memoryModalImage');
     
-    modal.classList.toggle('silent-memory-active', Boolean(memory.silent));
-    title.textContent = memory.silent ? '' : memory.title;
-    text.textContent = memory.silent ? '' : memory.content;
-    progress.textContent = memory.silent ? '' : `Memory ${index + 1}/${MEMORIES.length}`;
-    
-    // Set image — hide container completely when no image
-    if (memory.image) {
-        imageContainer.innerHTML = `<img src="${memory.image}" alt="${memory.title}" class="memory-modal-img cinematic-photo" loading="lazy" decoding="async">`;
-        imageContainer.classList.remove('hidden-image');
-    } else {
-        imageContainer.innerHTML = '';
-        imageContainer.classList.add('hidden-image');
-    }
-    
-    // Remove existing continue button
-    const existingBtn = document.querySelector('.memory-continue-btn');
-    if (existingBtn) {
-        existingBtn.remove();
-    }
-    
-    // Add continue button if it's the last memory
-    if (index === MEMORIES.length - 1) {
-        const continueBtn = document.createElement('button');
-        continueBtn.className = 'memory-continue-btn';
-        continueBtn.textContent = 'Continue →';
-        continueBtn.addEventListener('click', () => {
-            closeMemoryModal();
-            setTimeout(() => {
-                showSection('envelopeSection');
-            }, 400);
-        });
-        document.querySelector('.memory-modal-content').appendChild(continueBtn);
-    }
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Scroll modal and content to top so image appears first
-    modal.scrollTop = 0;
-    const modalContent = document.querySelector('.memory-modal-content');
-    if (modalContent) modalContent.scrollTop = 0;
-    
-    document.getElementById('memoryClose').focus();
+    // Batch DOM updates using requestAnimationFrame
+    requestAnimationFrame(() => {
+        modal.classList.toggle('silent-memory-active', Boolean(memory.silent));
+        title.textContent = memory.silent ? '' : memory.title;
+        text.textContent = memory.silent ? '' : memory.content;
+        progress.textContent = memory.silent ? '' : `Memory ${index + 1}/${MEMORIES.length}`;
+        
+        // Set image — hide container completely when no image
+        if (memory.image) {
+            imageContainer.innerHTML = `<img src="${memory.image}" alt="${memory.title}" class="memory-modal-img cinematic-photo" loading="lazy" decoding="async">`;
+            imageContainer.classList.remove('hidden-image');
+        } else {
+            imageContainer.innerHTML = '';
+            imageContainer.classList.add('hidden-image');
+        }
+        
+        // Remove existing continue button
+        const existingBtn = document.querySelector('.memory-continue-btn');
+        if (existingBtn) {
+            existingBtn.remove();
+        }
+        
+        // Add continue button if it's the last memory
+        if (index === MEMORIES.length - 1) {
+            const continueBtn = document.createElement('button');
+            continueBtn.className = 'memory-continue-btn';
+            continueBtn.textContent = 'Continue →';
+            continueBtn.addEventListener('click', () => {
+                closeMemoryModal();
+                setTimeout(() => {
+                    showSection('envelopeSection');
+                }, 400);
+            });
+            document.querySelector('.memory-modal-content').appendChild(continueBtn);
+        }
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Scroll modal and content to top so image appears first
+        modal.scrollTop = 0;
+        const modalContent = document.querySelector('.memory-modal-content');
+        if (modalContent) modalContent.scrollTop = 0;
+        
+        document.getElementById('memoryClose').focus();
+    });
 }
 
 function openSecretMemoryModal() {
@@ -561,35 +574,38 @@ function openSecretMemoryModal() {
     const progress = document.getElementById('memoryProgress');
     const imageContainer = document.getElementById('memoryModalImage');
     
-    modal.classList.remove('silent-memory-active');
-    title.textContent = SECRET_MEMORY.title;
-    text.textContent = SECRET_MEMORY.content;
-    progress.textContent = 'Secret Memory';
-    
-    // Set image — hide container completely when no image
-    if (SECRET_MEMORY.image) {
-        imageContainer.innerHTML = `<img src="${SECRET_MEMORY.image}" alt="${SECRET_MEMORY.title}" class="memory-modal-img cinematic-photo" loading="lazy" decoding="async">`;
-        imageContainer.classList.remove('hidden-image');
-    } else {
-        imageContainer.innerHTML = '';
-        imageContainer.classList.add('hidden-image');
-    }
-    
-    // Remove any continue button
-    const existingBtn = document.querySelector('.memory-continue-btn');
-    if (existingBtn) {
-        existingBtn.remove();
-    }
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Scroll modal and content to top so image appears first
-    modal.scrollTop = 0;
-    const modalContent = document.querySelector('.memory-modal-content');
-    if (modalContent) modalContent.scrollTop = 0;
-    
-    document.getElementById('memoryClose').focus();
+    // Batch DOM updates using requestAnimationFrame
+    requestAnimationFrame(() => {
+        modal.classList.remove('silent-memory-active');
+        title.textContent = SECRET_MEMORY.title;
+        text.textContent = SECRET_MEMORY.content;
+        progress.textContent = 'Secret Memory';
+        
+        // Set image — hide container completely when no image
+        if (SECRET_MEMORY.image) {
+            imageContainer.innerHTML = `<img src="${SECRET_MEMORY.image}" alt="${SECRET_MEMORY.title}" class="memory-modal-img cinematic-photo" loading="lazy" decoding="async">`;
+            imageContainer.classList.remove('hidden-image');
+        } else {
+            imageContainer.innerHTML = '';
+            imageContainer.classList.add('hidden-image');
+        }
+        
+        // Remove any continue button
+        const existingBtn = document.querySelector('.memory-continue-btn');
+        if (existingBtn) {
+            existingBtn.remove();
+        }
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Scroll modal and content to top so image appears first
+        modal.scrollTop = 0;
+        const modalContent = document.querySelector('.memory-modal-content');
+        if (modalContent) modalContent.scrollTop = 0;
+        
+        document.getElementById('memoryClose').focus();
+    });
 }
 
 function closeMemoryModal() {
@@ -610,6 +626,7 @@ function closeMemoryModal() {
 function createEnvelopeParticles() {
     const container = document.getElementById('envelopeParticles');
     const numParticles = Math.floor(20 * PERF_CONFIG.particleMultiplier); // Adaptive for mobile
+    const frag = document.createDocumentFragment(); // ✅ Use DocumentFragment
     
     for (let i = 0; i < numParticles; i++) {
         const particle = document.createElement('div');
@@ -620,8 +637,10 @@ function createEnvelopeParticles() {
         particle.style.animationDelay = Math.random() * 4 + 's';
         particle.style.animationDuration = (Math.random() * 2 + 3) + 's';
         
-        container.appendChild(particle);
+        frag.appendChild(particle); // ✅ Append to fragment
     }
+    
+    container.appendChild(frag); // ✅ Single DOM operation
 }
 
 // ===================================
@@ -719,29 +738,30 @@ function createConstellation() {
         });
         
         // Draw connections (less frequently for performance)
-        if (animationFrame % 3 === 0) { // Changed from 2 to 3 for better performance
-            stars.forEach((star1, i) => {
-                stars.forEach((star2, j) => {
-                    if (i !== j) {
-                        const distance = Math.sqrt(
-                            Math.pow(star2.x - star1.x, 2) + 
-                            Math.pow(star2.y - star1.y, 2)
-                        );
-                        
-                        if (distance < 150) {
-                            ctx.beginPath();
-                            ctx.moveTo(star1.x, star1.y);
-                            ctx.lineTo(star2.x, star2.y);
-                            ctx.strokeStyle = `rgba(102, 126, 234, ${0.15 * (1 - distance / 150)})`;
-                            ctx.lineWidth = 0.5;
-                            ctx.stroke();
-                        }
+        // Optimized: Only check nearby stars, use squared distance
+        if (animationFrame % 4 === 0) {
+            const maxDistSquared = 150 * 150; // Avoid Math.sqrt
+            for (let i = 0; i < stars.length; i++) {
+                const star1 = stars[i];
+                // Only check forward to avoid duplicate connections
+                for (let j = i + 1; j < stars.length; j++) {
+                    const star2 = stars[j];
+                    const dx = star2.x - star1.x;
+                    const dy = star2.y - star1.y;
+                    const distSquared = dx * dx + dy * dy;
+                    
+                    if (distSquared < maxDistSquared) {
+                        const dist = Math.sqrt(distSquared); // Only calculate when needed
+                        ctx.beginPath();
+                        ctx.moveTo(star1.x, star1.y);
+                        ctx.lineTo(star2.x, star2.y);
+                        ctx.strokeStyle = `rgba(102, 126, 234, ${0.15 * (1 - dist / 150)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
                     }
-                });
-            });
+                }
+            }
         }
-        
-        requestAnimationFrame(animate);
     }
     
     requestAnimationFrame(animate);
@@ -861,8 +881,6 @@ function createShootingStars() {
             s.x += Math.cos(s.angle) * s.speed;
             s.y += Math.sin(s.angle) * s.speed;
         }
-
-        requestAnimationFrame(animate);
     }
 
     requestAnimationFrame(animate);

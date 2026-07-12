@@ -18,8 +18,63 @@
     }
 }
 
+/* Prevent white flashes during scroll */
+html {
+    background-color: #000000;
+    background: radial-gradient(ellipse at 50% 40%, #07001a 0%, #020008 60%, #000000 100%);
+    background-attachment: fixed;
+}
+
 /* Mobile-first performance optimizations */
 @media (max-width: 768px) {
+    /* ========================================
+       CRITICAL: Remove blur from fixed elements
+       This is the PRIMARY cause of white flashes
+       ======================================== */
+    
+    /* Remove blur from fixed aurora layer - causes white flashes */
+    .aurora-band {
+        filter: none !important;
+        opacity: 0.25 !important;  /* Keep visual, remove expensive blur */
+    }
+    
+    /* Remove blur from fixed nebula layer - causes white flashes */
+    .nebula-patch {
+        filter: none !important;
+        opacity: 0.2 !important;  /* Keep visual, remove expensive blur */
+    }
+    
+    /* Remove backdrop-filter from fixed music button - repaints every scroll */
+    .music-button {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(0, 0, 0, 0.75) !important;  /* Solid background instead */
+    }
+    
+    /* Remove backdrop-filter from glass cards - causes lag on scroll */
+    .glass-card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(15, 10, 30, 0.88) !important;  /* Solid background */
+    }
+    
+    /* Remove backdrop-filter from memory modal */
+    .memory-modal {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(0, 0, 0, 0.94) !important;
+    }
+    
+    /* Disable ALL glow animations - continuous GPU usage */
+    .aurora-band,
+    .nebula-patch,
+    .star-glow,
+    .hero-portrait-glow,
+    .final-portrait-glow,
+    .seal-glow {
+        animation: none !important;
+    }
+    
     /* Disable heavy box-shadows on mobile */
     .star.medium,
     .star.bright,
@@ -27,23 +82,21 @@
         box-shadow: none !important;
     }
     
-    /* Simplify glass effects on mobile */
-    .glass-card {
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-    }
-    
-    /* Reduce blur on mobile */
+    /* Reduce blur on portrait glows */
     .hero-portrait-glow,
     .final-portrait-glow {
-        filter: blur(6px) !important;
-        opacity: 0.5 !important;
+        filter: blur(4px) !important;
+        opacity: 0.3 !important;
     }
     
-    /* Simplify shadows on mobile */
+    /* Simplify shadows on mobile - use outline for depth */
     .hero-portrait,
     .final-portrait,
-    .memory-modal-img,
+    .memory-modal-img {
+        box-shadow: none !important;
+        outline: 1px solid rgba(212, 175, 55, 0.2);
+    }
+    
     .envelope-body {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
     }
@@ -57,16 +110,9 @@
         box-shadow: inherit !important;
     }
     
-    /* Disable glow animations on mobile */
-    .hero-portrait-glow,
-    .final-portrait-glow,
-    .star-glow {
-        animation: none !important;
-    }
-    
     /* Simplify star animations on mobile */
     .star {
-        animation-duration: 5s !important;
+        animation-duration: 6s !important;
     }
     
     /* Optimize scrolling performance */
@@ -77,7 +123,14 @@
     
     /* Reduce filter usage */
     .star-icon {
-        filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4)) !important;
+        filter: none !important;  /* Remove expensive drop-shadow */
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);  /* Use text-shadow instead */
+    }
+    
+    /* Disable letter background image blur on mobile */
+    .letter-background-image {
+        filter: none !important;
+        opacity: 0.15 !important;
     }
 }
 
@@ -104,6 +157,7 @@
 /* Optimize rendering with containment */
 .section {
     contain: layout style paint;
+    background-color: transparent; /* Prevents white flash */
 }
 
 .memory-modal {
@@ -112,6 +166,33 @@
 
 .glass-card {
     contain: layout;
+}
+
+/* Canvas optimization */
+canvas {
+    contain: strict;
+    will-change: auto; /* Only set during active animation */
+}
+
+/* Fixed elements optimization */
+.music-button,
+.aurora-layer,
+.nebula-layer,
+.atmosphere-layer,
+.stars-container {
+    contain: strict;  /* Strict containment for better performance */
+    will-change: auto;  /* Don't hint will-change on scroll */
+}
+
+/* Disable will-change on fixed backgrounds during scroll */
+@media (max-width: 768px) {
+    .aurora-layer,
+    .nebula-layer,
+    .atmosphere-layer,
+    .stars-container {
+        will-change: auto !important;
+        transform: translateZ(0);  /* Force GPU layer but don't hint changes */
+    }
 }
 
 /* ===================================
@@ -141,8 +222,13 @@ body {
 
 /* Mobile scroll optimization */
 @media (max-width: 768px) {
+    html, body {
+        scroll-behavior: auto !important;  /* CRITICAL: No smooth scroll on mobile */
+    }
+    
     body {
-        scroll-behavior: auto; /* Smooth scroll can cause lag on mobile */
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: none;
     }
 }
 
@@ -519,12 +605,12 @@ button:focus-visible,
 }
 
 @keyframes auroraDrift {
-    0%   { opacity: 0;    transform: translateX(0%)   scaleY(1);   }
-    15%  { opacity: 1;    transform: translateX(8%)   scaleY(1.1); }
-    40%  { opacity: 0.7;  transform: translateX(-6%)  scaleY(0.9); }
-    65%  { opacity: 1;    transform: translateX(10%)  scaleY(1.2); }
-    85%  { opacity: 0.5;  transform: translateX(-4%)  scaleY(1);   }
-    100% { opacity: 0;    transform: translateX(0%)   scaleY(1);   }
+    0%   { opacity: 0;    transform: translate3d(0%, 0, 0) scale3d(1, 1, 1);      }
+    15%  { opacity: 1;    transform: translate3d(8%, 0, 0) scale3d(1, 1.1, 1);    }
+    40%  { opacity: 0.7;  transform: translate3d(-6%, 0, 0) scale3d(1, 0.9, 1);   }
+    65%  { opacity: 1;    transform: translate3d(10%, 0, 0) scale3d(1, 1.2, 1);   }
+    85%  { opacity: 0.5;  transform: translate3d(-4%, 0, 0) scale3d(1, 1, 1);     }
+    100% { opacity: 0;    transform: translate3d(0%, 0, 0) scale3d(1, 1, 1);      }
 }
 
 /* ===================================
@@ -580,8 +666,8 @@ button:focus-visible,
 }
 
 @keyframes nebulaPulse {
-    0%, 100% { opacity: 0.6; transform: scale(1);    }
-    50%       { opacity: 1;   transform: scale(1.12); }
+    0%, 100% { opacity: 0.6; transform: scale3d(1, 1, 1);       }
+    50%       { opacity: 1;   transform: scale3d(1.12, 1.12, 1); }
 }
 
 /* ===================================
